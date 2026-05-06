@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Conversion Dashboard</h1>
+  <p class="subtitle">Website audit insights for <strong>graphura.online</strong></p>
+</div>
+<div class="kpi-grid">
+  <div class="kpi-card"><span class="kpi-label">Pages Audited</span><span class="kpi-value">{{ audit|length }}</span></div>
+  <div class="kpi-card kpi-high"><span class="kpi-label">High Potential</span><span class="kpi-value">{{ audit|selectattr("potential","eq","High")|list|length }}</span></div>
+  <div class="kpi-card kpi-med"><span class="kpi-label">Medium Potential</span><span class="kpi-value">{{ audit|selectattr("potential","eq","Medium")|list|length }}</span></div>
+  <div class="kpi-card kpi-low"><span class="kpi-label">Low Potential</span><span class="kpi-value">{{ audit|selectattr("potential","eq","Low")|list|length }}</span></div>
+</div>
+<div class="section-grid">
+  <div class="card">
+    <h2 class="card-title">Page Audit Results</h2>
+    <table class="data-table">
+      <thead><tr><th>Page</th><th>Type</th><th>Load Speed</th><th>Mobile</th><th>Clarity</th><th>Potential</th><th>Score</th></tr></thead>
+      <tbody>
+        {% for row in audit %}
+        <tr>
+          <td><strong>{{ row.page }}</strong></td>
+          <td><span class="badge badge-neutral">{{ row.type }}</span></td>
+          <td>{{ row.load }}</td><td>{{ row.mobile }}</td><td>{{ row.clarity }}</td>
+          <td><span class="badge badge-{{ 'high' if row.potential=='High' else ('med' if row.potential=='Medium' else 'low') }}">{{ row.potential }}</span></td>
+          <td><div class="score-bar-wrap"><div class="score-bar" style="width:{{ row.score }}%"></div><span class="score-num">{{ row.score }}%</span></div></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Common Issues Found</h2>
+    <ul class="issue-list">
+      <li class="issue-item issue-warn">H1 tag missing on Sitemap, Partner, Verify</li>
+      <li class="issue-item issue-warn">Mobile friendliness is only "Partial" across all pages</li>
+      <li class="issue-item issue-warn">Verify page has slow load speed (1-3s)</li>
+      <li class="issue-item issue-info">CTA present on all pages — good baseline</li>
+      <li class="issue-item issue-info">Homepage and Contact have highest conversion potential</li>
+    </ul>
+    <a href="/predict" class="btn btn-primary" style="margin-top:1.5rem;display:inline-block">Run ML Predictor →</a>
+  </div>
+</div>
+{% endblock %}

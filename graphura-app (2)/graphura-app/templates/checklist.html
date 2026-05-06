@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Optimization Checklist &amp; Wireframe Suggestions</h1>
+  <p class="subtitle">Data-driven improvements for Graphura's website based on audit and ML model findings</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-pill active" data-tab="checklist">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Optimization Checklist
+  </button>
+  <button class="tab-pill" data-tab="wireframes">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    Wireframe Suggestions
+  </button>
+</div>
+
+<div id="tab-checklist" class="tab-content active">
+  <div class="cl-summary">
+    <div class="cl-stat cl-stat-high"><span class="cl-stat-num">3</span><span class="cl-stat-label">High Priority</span></div>
+    <div class="cl-stat cl-stat-med"><span class="cl-stat-num">2</span><span class="cl-stat-label">Medium Priority</span></div>
+    <div class="cl-stat"><span class="cl-stat-num">1</span><span class="cl-stat-label">Low Priority</span></div>
+    <div class="cl-stat cl-stat-done"><span class="cl-stat-num" id="totalDone">0</span><span class="cl-stat-label">tasks Completed</span></div>
+  </div>
+  <div class="cl-grid">
+    {% for cat in checklist %}
+    <div class="cl-card" data-total="{{ cat.tasks|length }}">
+      <div class="cl-card-header">
+        <span class="cl-card-title">{{ cat.category }}</span>
+        <span class="badge badge-{{ 'high' if cat.priority=='High' else ('med' if cat.priority=='Medium' else 'low') }}">{{ cat.priority }} Priority</span>
+      </div>
+      <ul class="cl-tasks">
+        {% for item in cat.tasks %}
+        <li class="cl-item">
+          <label class="cl-label">
+            <input type="checkbox" class="cl-check">
+            <span class="cl-checkmark"></span>
+            <span class="cl-text">{{ item }}</span>
+          </label>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="cl-progress-wrap">
+        <div class="cl-progress-track"><div class="cl-progress-bar" data-total="{{ cat.tasks|length }}"></div></div>
+        <span class="cl-progress-label">0 / {{ cat.tasks|length }} done</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div id="tab-wireframes" class="tab-content">
+  <p class="wf-intro">Recommended section layouts for key Graphura pages, ordered by conversion importance.</p>
+  <div class="wf-grid">
+    {% for wf in wireframes %}
+    <div class="card wf-card">
+      <div class="wf-card-header">
+        <div class="wf-page-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <h2 class="wf-title">{{ wf.page }}</h2>
+      </div>
+      <div class="wf-sections">
+        {% for sec in wf.sections %}
+        <div class="wf-section">
+          <span class="wf-num">{{ loop.index }}</span>
+          <div class="wf-block"><div class="wf-block-inner">{{ sec }}</div></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="wf-tip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>{{ wf.tip }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll(".tab-pill").forEach(p=>p.addEventListener("click",()=>{
+  document.querySelectorAll(".tab-pill").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(x=>x.classList.remove("active"));
+  p.classList.add("active");
+  document.getElementById("tab-"+p.dataset.tab).classList.add("active");
+}));
+document.querySelectorAll(".cl-card").forEach(card=>{
+  const checks=card.querySelectorAll(".cl-check");
+  const bar=card.querySelector(".cl-progress-bar");
+  const label=card.querySelector(".cl-progress-label");
+  const total=parseInt(card.dataset.total);
+  function update(){
+    const done=[...checks].filter(c=>c.checked).length;
+    const pct=Math.round(done/total*100);
+    bar.style.width=pct+"%";
+    bar.style.background=pct===100?"var(--color-success)":"var(--color-primary)";
+    label.textContent=done+" / "+total+" done";
+    document.getElementById("totalDone").textContent=[...document.querySelectorAll(".cl-check")].filter(c=>c.checked).length;
+  }
+  checks.forEach(c=>c.addEventListener("change",update));
+});
+</script>
+{% endblock %}

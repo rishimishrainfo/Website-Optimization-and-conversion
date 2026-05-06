@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Conversion Predictor</h1>
+  <p class="subtitle">Enter page features to predict conversion potential using ML models</p>
+</div>
+<div class="predictor-grid">
+  <div class="card">
+    <h2 class="card-title">Page Features</h2>
+    <form id="predictForm">
+      <div class="form-grid">
+        <div class="form-group"><label>Page Type</label><select id="page_type" name="page_type">{% for v in options.page_type %}<option>{{ v }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label>CTA Present</label><div class="radio-group"><label class="radio-label"><input type="radio" name="cta_presence" value="1" checked> Yes</label><label class="radio-label"><input type="radio" name="cta_presence" value="0"> No</label></div></div>
+        <div class="form-group"><label>CTA Position</label><select id="cta_position" name="cta_position">{% for v in options.cta_position %}<option>{{ v }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label>Form Length</label><select id="form_length" name="form_length">{% for v in options.form_length %}<option>{{ v }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label>Load Speed</label><select id="load_speed" name="load_speed">{% for v in options.load_speed %}<option>{{ v }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label>Mobile Friendly</label><select id="mobile_friendly" name="mobile_friendly">{% for v in options.mobile_friendly %}<option>{{ v }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label>Content Length</label><select id="content_length" name="content_length">{% for v in options.content_length %}<option>{{ v }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label>Content Clarity</label><select id="content_clarity" name="content_clarity">{% for v in options.content_clarity %}<option>{{ v }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="form-group" style="margin-top:1rem">
+        <label>ML Model</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="model" value="dt" checked> Decision Tree (85%)</label>
+          <label class="radio-label"><input type="radio" name="model" value="lr"> Logistic Regression (86%)</label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="margin-top:1.5rem;width:100%">Predict Conversion</button>
+    </form>
+  </div>
+  <div class="card" id="resultCard" style="display:none">
+    <h2 class="card-title">Prediction Result</h2>
+    <div id="resultContent"></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("predictForm").addEventListener("submit",async(e)=>{
+  e.preventDefault();
+  const fd=new FormData(e.target), payload=Object.fromEntries(fd.entries());
+  const btn=e.target.querySelector("button[type=submit]");
+  btn.textContent="Predicting…"; btn.disabled=true;
+  const res=await fetch("/api/predict",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const data=await res.json();
+  btn.textContent="Predict Conversion"; btn.disabled=false;
+  if(data.error){alert(data.error);return;}
+  const isHigh=data.label.includes("High");
+  const recs=data.recommendations.map(r=>`<li class="issue-item issue-info">${r}</li>`).join("");
+  document.getElementById("resultContent").innerHTML=`
+    <div class="result-badge ${isHigh?"result-high":"result-low"}">${data.label}</div>
+    <span class="kpi-label">Model Confidence</span>
+    <div class="conf-bar-wrap"><div class="conf-bar" style="width:${data.confidence}%"></div></div>
+    <p style="font-size:var(--text-sm);font-weight:600;margin-bottom:1.25rem">${data.confidence}%</p>
+    <h3 style="font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin-bottom:.75rem">Recommendations</h3>
+    <ul class="issue-list">${recs}</ul>`;
+  document.getElementById("resultCard").style.display="block";
+});
+</script>
+{% endblock %}
